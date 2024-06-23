@@ -1,8 +1,11 @@
 import inquirer from 'inquirer';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import Axios from 'axios';
 
 dotenv.config();
+
+const zapGptConnectUrl = 'http://local.zapgptconnect.com.br'
 
 const mainQuestion = [
   {
@@ -86,6 +89,18 @@ const gptQuestions = [
   },
 ];
 
+const lightsailQuestion = [
+  {
+    type: 'input',
+    name: 'LIGHTSAIL_ID',
+    message:
+      'Informe o ID da instância LightSail:',
+    validate: (input) =>
+      !!input ||
+      'O LIGHTSAIL_ID não pode ser vazio. Por favor, informe um valor válido.',
+  },
+];
+
 const processCommonQuestions = async (envConfig) => {
   const commonAnswers = await inquirer.prompt(commonQuestions);
   Object.keys(commonAnswers).forEach((key) => {
@@ -94,19 +109,96 @@ const processCommonQuestions = async (envConfig) => {
   return envConfig;
 };
 
+const initGPTEnvConfig = async (lightsailAnswers, envConfig) => {
+  envConfig += `LIGHTSAIL_ID="${lightsailAnswers.LIGHTSAIL_ID}"\n`;
+
+  try {
+    const response = await Axios.get(`${zapGptConnectUrl}/api/getconfig/${lightsailAnswers.LIGHTSAIL_ID}`);
+
+    const data = response.data.data;
+
+    if (validateGPTConfig(data)) {
+      envConfig += `OPENAI_KEY="${data.openai_key}"\nOPENAI_ASSISTANT="${data.openai_assistant}"\n`;
+
+      commonQuestions.forEach((question) => {
+        let answer;
+
+        switch (question.name) {
+          case 'MENSAGEM_PARA_ENVIAR_QUANDO_RECEBER_TIPO_DESCONHECIDO':
+            answer = data.mensagem_demais_tipos;
+            break;
+          case 'HORAS_PARA_REATIVAR_IA':
+            answer = data.horas_para_ia_voltar;
+            break;
+          case 'SOMENTE_RESPONDER':
+            answer = data.responder_apenas ? data.responder_apenas : '';
+            break;
+          case 'NAO_RESPONDER':
+            answer = data.nao_responder ? data.nao_responder : '';
+            break;
+          case 'SEGUNDOS_PARA_ESPERAR_ANTES_DE_GERAR_RESPOSTA':
+            answer = data.segundos_para_resposta;
+            break;
+        }
+
+        envConfig += `${question.name}="${answer}"\n`;
+      });
+
+      return envConfig;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('### ERRO de conexão ao ZapGptConnect');
+    console.error(error.message);
+  }
+}
+
+const validateGPTConfig = (data) => {
+  let isValid = true;
+
+  if (!data.openai_key) {
+    console.error('### ERRO na resposta do ZapGptConnect: openai_key vazio.');
+    isValid = false;
+  }
+
+  if (!data.openai_assistant) {
+    console.error('### ERRO na resposta do ZapGptConnect: openai_assistant vazio.');
+    isValid = false;
+  }
+
+  if (!data.mensagem_demais_tipos) {
+    console.error('### ERRO na resposta do ZapGptConnect: mensagem_demais_tipos vazio.');
+    isValid = false;
+  }
+
+  if (!data.horas_para_ia_voltar) {
+    console.error('### ERRO na resposta do ZapGptConnect: horas_para_ia_voltar vazio.');
+    isValid = false;
+  }
+
+  if (!data.segundos_para_resposta) {
+    console.error('### ERRO na resposta do ZapGptConnect: segundos_para_resposta vazio.');
+    isValid = false;
+  }
+
+  return isValid;
+}
+
 inquirer.prompt(mainQuestion).then(async (answers) => {
   let envConfig = `AI_SELECTED="${answers.AI_SELECTED}"\n`;
 
   if (answers.AI_SELECTED === 'GEMINI') {
     const geminiAnswer = await inquirer.prompt(geminiQuestion);
     envConfig += `GEMINI_KEY="${geminiAnswer.GEMINI_KEY}"\nGEMINI_PROMPT="${geminiAnswer.GEMINI_PROMPT}"\n`;
+    envConfig = await processCommonQuestions(envConfig);
   } else {
-    const gptAnswers = await inquirer.prompt(gptQuestions);
-    envConfig += `OPENAI_KEY="${gptAnswers.OPENAI_KEY}"\nOPENAI_ASSISTANT="${gptAnswers.OPENAI_ASSISTANT}"\n`;
+    const lightsailAnswers = await inquirer.prompt(lightsailQuestion);
+    envConfig = await initGPTEnvConfig(lightsailAnswers, envConfig);
   }
 
-  envConfig = await processCommonQuestions(envConfig);
-
-  fs.writeFileSync('.env', envConfig, { encoding: 'utf8' });
-  console.log('Configuração salva com sucesso! 🎉');
+  if (envConfig) {
+    fs.writeFileSync('.env', envConfig, { encoding: 'utf8' });
+    console.log('Configuração salva com sucesso! 🎉');
+  }
 });
