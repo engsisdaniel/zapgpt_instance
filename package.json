@@ -7,7 +7,9 @@
     "config": "node ./setup.js",
     "dev": "node dist/index.cjs",
     "start": "pm2 start dist/index.cjs --name zap-gpt --no-daemon",
-    "stop": "npx pm2 delete zap-gpt"
+    "stop": "npx pm2 delete zap-gpt",
+    "build": "tsup src",
+    "watch": "node dist/watch.cjs"
   },
   "keywords": [],
   "author": {
@@ -26,13 +28,22 @@
     "@hapi/boom": "10.0.1",
     "@whiskeysockets/baileys": "6.7.1",
     "axios": "1.6.8",
+    "child_process": "^1.0.2",
     "dotenv": "16.4.5",
     "fluent-ffmpeg": "^2.1.2",
+    "form-data": "^4.0.0",
     "inquirer": "9.2.16",
     "node-cache": "5.1.2",
     "openai": "^4.46.1",
     "pino": "7.11.0",
     "qrcode-terminal": "0.12.0",
     "winston": "3.13.0"
+  },
+  "devDependencies": {
+    "pm2": "^5.3.1",
+    "prettier": "^3.2.4",
+    "tsup": "^8.0.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
   }
 }
