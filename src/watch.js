@@ -6,8 +6,6 @@ const { spawn } = require('node:child_process');
 
 require('dotenv').config()
 
-const zapGptConnectUrl = 'http://local.zapgptconnect.com.br'
-
 const ls = spawn(process.execPath, ['dist/index.cjs'], {
     cwd: path.resolve(__dirname, '..'),
     stdio: ["inherit", "pipe", "pipe"]
@@ -26,7 +24,7 @@ ls.stdout.on('data', async (output) => {
     };
 
     try {
-        const response = await Axios.post(`${zapGptConnectUrl}/api/setlog/${process.env.LIGHTSAIL_ID}`, form, requestConfig);
+        const response = await Axios.post(`${process.env.CONNECT_URL}/api/setlog/${process.env.LIGHTSAIL_ID}`, form, requestConfig);
         console.log(`DATA:`);
         console.log(response.data);
     } catch (error) {

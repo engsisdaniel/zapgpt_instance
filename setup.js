@@ -5,7 +5,9 @@ import Axios from 'axios';
 
 dotenv.config();
 
-const zapGptConnectUrl = 'http://local.zapgptconnect.com.br'
+// const zapGptConnectUrl = 'http://local.zapgptconnect.com.br'
+const zapGptConnectUrl = 'https://chat.digiital.com.br'
+
 const AI_SELECTED = 'GPT';
 
 const mainQuestion = [
@@ -111,7 +113,7 @@ const processCommonQuestions = async (envConfig) => {
 };
 
 const initGPTEnvConfig = async (lightsailAnswers, envConfig) => {
-  envConfig += `LIGHTSAIL_ID="${lightsailAnswers.LIGHTSAIL_ID}"\n`;
+  envConfig += `CONNECT_URL="${zapGptConnectUrl}"\nLIGHTSAIL_ID="${lightsailAnswers.LIGHTSAIL_ID}"\n`;
 
   try {
     const response = await Axios.get(`${zapGptConnectUrl}/api/getconfig/${lightsailAnswers.LIGHTSAIL_ID}`);
