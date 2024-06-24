@@ -6,6 +6,7 @@ import Axios from 'axios';
 dotenv.config();
 
 const zapGptConnectUrl = 'http://local.zapgptconnect.com.br'
+const AI_SELECTED = 'GPT';
 
 const mainQuestion = [
   {
@@ -185,20 +186,18 @@ const validateGPTConfig = (data) => {
   return isValid;
 }
 
-inquirer.prompt(mainQuestion).then(async (answers) => {
-  let envConfig = `AI_SELECTED="${answers.AI_SELECTED}"\n`;
+let envConfig = `AI_SELECTED="${AI_SELECTED}"\n`;
 
-  if (answers.AI_SELECTED === 'GEMINI') {
-    const geminiAnswer = await inquirer.prompt(geminiQuestion);
-    envConfig += `GEMINI_KEY="${geminiAnswer.GEMINI_KEY}"\nGEMINI_PROMPT="${geminiAnswer.GEMINI_PROMPT}"\n`;
-    envConfig = await processCommonQuestions(envConfig);
-  } else {
-    const lightsailAnswers = await inquirer.prompt(lightsailQuestion);
-    envConfig = await initGPTEnvConfig(lightsailAnswers, envConfig);
-  }
+if (AI_SELECTED === 'GEMINI') {
+  const geminiAnswer = await inquirer.prompt(geminiQuestion);
+  envConfig += `GEMINI_KEY="${geminiAnswer.GEMINI_KEY}"\nGEMINI_PROMPT="${geminiAnswer.GEMINI_PROMPT}"\n`;
+  envConfig = await processCommonQuestions(envConfig);
+} else {
+  const lightsailAnswers = await inquirer.prompt(lightsailQuestion);
+  envConfig = await initGPTEnvConfig(lightsailAnswers, envConfig);
+}
 
-  if (envConfig) {
-    fs.writeFileSync('.env', envConfig, { encoding: 'utf8' });
-    console.log('Configuração salva com sucesso! 🎉');
-  }
-});
+if (envConfig) {
+  fs.writeFileSync('.env', envConfig, { encoding: 'utf8' });
+  console.log('Configuração salva com sucesso! 🎉');
+}

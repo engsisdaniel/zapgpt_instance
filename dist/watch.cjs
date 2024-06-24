@@ -26,6 +26,7 @@ var import_axios = __toESM(require("axios"), 1);
 var path = require("path");
 var FormData = require("form-data");
 var { spawn } = require("child_process");
+require("dotenv").config();
 var zapGptConnectUrl = "http://local.zapgptconnect.com.br";
 var ls = spawn(process.execPath, ["dist/index.cjs"], {
   cwd: path.resolve(__dirname, ".."),
@@ -41,7 +42,7 @@ ls.stdout.on("data", async (output) => {
     }
   };
   try {
-    const response = await import_axios.default.post(`${zapGptConnectUrl}/api/setlog/1234`, form, requestConfig);
+    const response = await import_axios.default.post(`${zapGptConnectUrl}/api/setlog/${process.env.LIGHTSAIL_ID}`, form, requestConfig);
     console.log(`DATA:`);
     console.log(response.data);
   } catch (error) {
