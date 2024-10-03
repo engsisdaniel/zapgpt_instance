@@ -6,7 +6,7 @@ import Axios from 'axios';
 dotenv.config();
 
 // const zapGptConnectUrl = 'http://local.zapgptconnect.com.br'
-const zapGptConnectUrl = 'https://chat.digiital.com.br'
+const zapGptConnectUrl = 'https://ia.digiital.com.br'
 
 const AI_SELECTED = 'GPT';
 
